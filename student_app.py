@@ -111,7 +111,7 @@ with tab1:
         df = pd.read_csv(file)
         
         # --- FEATURE 1: DATA CLEANING ---
-        st.subheader("1. Data Health & Cleaning")
+        st.subheader("Data Health & Cleaning")
         missing_count = df.isnull().sum().sum()
         
         if missing_count > 0:
@@ -169,7 +169,7 @@ with tab1:
 
         # --- FEATURE 2: DISTRIBUTIONS (New!) ---
         if 'final_grade' in df.columns:
-            st.subheader("2. Grade Distribution")
+            st.subheader("Grade Distribution")
             st.write("How are the grades spread across the class?")
             
             # Simple Streamlit Bar Chart
@@ -182,7 +182,7 @@ with tab1:
         # --- FEATURE 3: CORRELATIONS ---
         # We can only show correlations if the file actually has 'final_grade'
         if 'final_grade' in df.columns:
-            st.subheader("3. Correlation Analysis")
+            st.subheader("Correlation Analysis")
             st.write("Which factors actually affect the final grade?")
             
             # Select only numbers (ignore Names/IDs if they exist)
@@ -207,7 +207,7 @@ with tab1:
         st.divider()
 
         # --- FEATURE 4: PREDICTIONS ---
-        st.subheader("4. Predictive Modeling")
+        st.subheader("Predictive Modeling")
         if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
             try:
