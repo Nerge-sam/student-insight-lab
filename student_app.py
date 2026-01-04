@@ -166,10 +166,12 @@ with tab1:
 
         st.divider()
         # --- FEATURE 2: DATA OVERVIEW ---
-        st.write(df.tail(5))
+        st.subheader("Data Overview")
+        overview_df = df.sample(5)
+        st.write(overview_df)
 
         st.divider()  
-        # --- FEATURE 2: DISTRIBUTIONS ---
+        # --- FEATURE 3: DISTRIBUTIONS ---
         if 'final_grade' in df.columns:
             st.subheader("Grade Distribution")
             st.write("How are the grades spread across the class?")
@@ -183,7 +185,7 @@ with tab1:
 
         st.divider()
 
-        # --- FEATURE 3: CORRELATIONS ---
+        # --- FEATURE 4: CORRELATIONS ---
         # We can only show correlations if the file actually has 'final_grade'
         if 'final_grade' in df.columns:
             st.subheader("Correlation Analysis")
@@ -210,7 +212,7 @@ with tab1:
 
         st.divider()
 
-        # --- FEATURE 4: PREDICTIONS ---
+        # --- FEATURE 5: PREDICTIONS ---
         st.subheader("Predictive Modeling")
         if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
