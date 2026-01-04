@@ -160,8 +160,8 @@ with tab1:
                 df = df.dropna(subset=cols_to_clean)
 
             st.success(f"✅ Applied Strategy: {clean_method}")
-        else:
             st.write("**Note:** Data cleaning is applied to input features only. The **Final Grade** is left untouched to ensure accurate predictions.")
+        else:
             st.success("✅ Data is strictly clean! No missing values detected.")
 
         st.divider()  # --- FEATURE 2: DISTRIBUTIONS ---
