@@ -115,14 +115,53 @@ with tab1:
         missing_count = df.isnull().sum().sum()
         
         if missing_count > 0:
-            st.warning(f"⚠️ Found {missing_count} missing values in the uploaded file.")
-            
-            # Show where the missing data is
+            st.warning(f"⚠️ Found {missing_count} missing values.")
             st.write("Missing data by column:", df.isnull().sum()[df.isnull().sum() > 0])
             
-            # AUTO-CLEAN: Fill missing numeric values with the column average (Mean Imputation)
-            df = df.fillna(df.mean(numeric_only=True))
-            st.success("✅ specific fix: Missing values have been filled with the column average.")
+            st.markdown("### 🛠️ Choose a Cleaning Strategy")
+            
+            clean_method = st.radio(
+                "Select a method:",
+                ["Mean (Average)", "Median (Middle)", "Mode (Most Frequent)", "Specific Value", "Fill with 0 (Zero)", "Drop Rows"],
+                horizontal=True
+            )
+
+            # 1. MEAN
+            if clean_method == "Mean (Average)":
+                st.info("ℹ️ **Good for:** Normal data. **Bad for:** Data with extreme outliers.")
+                df = df.fillna(df.mean(numeric_only=True))
+                
+            # 2. MEDIAN
+            elif clean_method == "Median (Middle)":
+                st.info("ℹ️ **Good for:** Skewed data (e.g., income, grades). **Bad for:** Precise totals.")
+                df = df.fillna(df.median(numeric_only=True))
+            
+            # 3. MODE (Most Frequent)
+            elif clean_method == "Mode (Most Frequent)":
+                st.info("ℹ️ **Good for:** Categories (e.g., 'Yes/No') or common scores. **Bad for:** Continuous numbers.")
+                # Mode can return multiple values, so we take the first one [0]
+                for col in df.columns:
+                    if df[col].isnull().sum() > 0:
+                        df[col] = df[col].fillna(df[col].mode()[0])
+            
+            # 4. CUSTOM VALUE
+            elif clean_method == "Specific Value":
+                st.info("ℹ️ **Good for:** Policy rules (e.g., 'Missing = 0').")
+                custom_val = st.number_input("Enter the value to fill:", value=0)
+                df = df.fillna(custom_val)
+
+            # 5. FILL WITH 0(ZERO)
+            elif clean_method == "Fill with 0 (Zero)":
+                st.info("ℹ️ **Pros:** Safe assumption if missing means 'did not submit'. **Cons:** brutally lowers the class average.")
+                df = df.fillna(0)
+                
+            # 6. DROP
+            elif clean_method == "Drop Rows":
+                st.error("⚠️ **Warning:** Removes data. Use only if you have plenty of rows.")
+                df = df.dropna()
+
+            st.success(f"✅ Applied Strategy: {clean_method}")
+
         else:
             st.success("✅ Data is strictly clean! No missing values detected.")
         
