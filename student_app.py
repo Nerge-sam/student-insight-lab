@@ -164,7 +164,12 @@ with tab1:
         else:
             st.success("✅ Data is strictly clean! No missing values detected.")
 
-        st.divider()  # --- FEATURE 2: DISTRIBUTIONS ---
+        st.divider()
+        # --- FEATURE 2: DATA OVERVIEW ---
+        st.write(df.sample(5)
+
+        st.divider()  
+        # --- FEATURE 2: DISTRIBUTIONS ---
         if 'final_grade' in df.columns:
             st.subheader("Grade Distribution")
             st.write("How are the grades spread across the class?")
