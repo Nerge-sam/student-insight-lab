@@ -24,16 +24,24 @@ load_dotenv() # Load your HF Key
 
 def get_ai_feedback(prediction, hours, attendance, prev_score):
     """Generates a human-like explanation using Groq (Llama 3)."""
-    
+    # Initialize to avoid UnboundLocalError
+    api_key = None
     try:
         st.secret = st.secrets["GROQ_API_KEY"]
-    except:
+    except Exception:
+        pass
+    # If Cloud failed, try local .env (Laptop)
+    if not api_key:
         api_key = os.getenv("GROQ_API_KEY")
+
+    # Final Check
+    if not api_key:
+        return "❌ Error: Missing GROQ_API_KEY. Set it in Secrets (Cloud) or .env (Local)."
 
     if not api_key:
         return "❌ Error: Missing GROQ_API_KEY in .env file."
 
-    # 2. Define the Prompt
+    # Define the Prompt
     prompt = f"""You are an academic advisor. 
     A student has the following stats:
     - Predicted Final Grade: {prediction:.1f}/100
@@ -43,7 +51,7 @@ def get_ai_feedback(prediction, hours, attendance, prev_score):
 
     Provide ONE sentence of specific, actionable advice to help them improve."""
 
-    # 3. Call Groq API (Standard OpenAI Format)
+    # Call Groq API (Standard OpenAI Format)
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -72,20 +80,20 @@ def retrain_model(new_df):
     Takes new data, combines it with old knowledge, 
     and saves a smarter 'Edition 2' model.
     """
-    # 1. Handle missing columns if the user uploaded a messy CSV
+    # Handle missing columns if the user uploaded a messy CSV
     required_cols = ['hours_studied', 'attendance_rate', 'previous_score', 'tutoring_sessions', 'final_grade']
     if not all(col in new_df.columns for col in required_cols):
         return "❌ Error: CSV is missing columns!"
 
-    # 2. Define X and y from the NEW data
+    # Define X and y from the NEW data
     X_new = new_df[['hours_studied', 'attendance_rate', 'previous_score', 'tutoring_sessions']]
     y_new = new_df['final_grade']
     
-    # 3. Train a NEW model on just the new data
+    # Train a NEW model on just the new data
     new_model = LinearRegression()
     new_model.fit(X_new, y_new)
     
-    # 4. Save it (Overwrite the old brain)
+    # Save it (Overwrite the old brain)
     joblib.dump(new_model, 'student_grade_predictor.pkl')
     return "✅ Success! The model has learned from the new data."
 
@@ -94,65 +102,83 @@ st.title("🎓 Student Performance Insight Lab")
 
 tab1, tab2= st.tabs(["📊 Batch Analysis", "🔮 Grade Predictor"])
 
-# === TAB 1: DASHBOARD ===
+# === TAB 1: BATCH ANALYSIS & INSIGHTS ===
 with tab1:
+    st.header("📊 Batch Analysis & Data Insights")
     file = st.file_uploader("Upload Student CSV", type=["csv"])
     
-    # 1. OUTER CHECK: Did the user upload anything?
     if file is not None:
         df = pd.read_csv(file)
-        # 2. INNER CHECK:
         
-        # (Dashboard Mode) when grades are present
-        if 'final_grade' in df.columns:
-            st.success("✅ Historical Data Detected (Grades Included)")
-            st.dataframe(df.head())
+        # --- FEATURE 1: DATA CLEANING ---
+        st.subheader("1. Data Health & Cleaning")
+        missing_count = df.isnull().sum().sum()
+        
+        if missing_count > 0:
+            st.warning(f"⚠️ Found {missing_count} missing values in the uploaded file.")
             
-            # Some basic stats
-            st.header("📈 Performance Overview")
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Avg Score", f"{df['final_grade'].mean():.1f}")
-            col2.metric("Max Score", f"{df['final_grade'].max():.1f}")
-            col3.metric("Min Score", f"{df['final_grade'].min():.1f}")
-            st.bar_chart(df['final_grade'])
-
-            st.header("🏆 Top Performing Students")
-            top_students = df.sort_values(by='final_grade', ascending=False).head(5)
-            st.table(top_students[['hours_studied', 'attendance_rate', 'final_grade']])
-
-        # (Prediction Mode) when grades are missing
+            # Show where the missing data is
+            st.write("Missing data by column:", df.isnull().sum()[df.isnull().sum() > 0])
+            
+            # AUTO-CLEAN: Fill missing numeric values with the column average (Mean Imputation)
+            df = df.fillna(df.mean(numeric_only=True))
+            st.success("✅ specific fix: Missing values have been filled with the column average.")
         else:
+            st.success("✅ Data is strictly clean! No missing values detected.")
+
+        st.divider()
+
+        # --- FEATURE 2: CORRELATIONS ---
+        # We can only show correlations if the file actually has 'final_grade'
+        if 'final_grade' in df.columns:
+            st.subheader("2. Correlation Analysis")
+            st.write("Which factors actually affect the final grade?")
+            
+            # Select only numbers (ignore Names/IDs if they exist)
+            numeric_df = df.select_dtypes(include=['float64', 'int64'])
+            
+            # Calculate Correlation Matrix
+            corr_matrix = numeric_df.corr()
+            
+            # DISPLAY HEATMAP (Using Pandas Styling - No heavy Seaborn needed!)
+            st.dataframe(corr_matrix.style.background_gradient(cmap="coolwarm"), use_container_width=True)
+            
+            # INTELLIGENT INSIGHT
+            # Find the factor with the highest correlation to 'final_grade' (ignoring the grade itself)
+            top_factor = corr_matrix['final_grade'].drop('final_grade').idxmax()
+            top_value = corr_matrix['final_grade'][top_factor]
+            
+            st.info(f"💡 **Discovery:** The strongest predictor of success in this dataset is **'{top_factor}'** (Correlation: {top_value:.2f}).")
+            
+        else:
+            st.info("ℹ️ Upload a file with 'final_grade' to see correlations.")
+
+        st.divider()
+
+        # --- FEATURE 3: PREDICTIONS (Existing Logic) ---
+        st.subheader("3. Predictive Modeling")
+        if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
             try:
-                # Ensure we have the input columns needed for the model
                 X_new = df[['hours_studied', 'attendance_rate', 'previous_score', 'tutoring_sessions']]
-                
-                # Predict!
-                df['predicted_grade'] = model.predict(X_new)
-                # Ensure grades are within 0-100
-                df['predicted_grade'] = df['predicted_grade'].clip(0, 100)
-                
-                df['predicted_grade'] = df['predicted_grade'].round(1) # Round to 1 decimal place
-                
-                st.success("🎉 Predictions Generated!")
+                df['predicted_grade'] = model.predict(X_new).clip(0, 100).round(1)
                 st.dataframe(df)
-
-                # Download Button
+                
+                # Download
                 csv = df.to_csv(index=False).encode('utf-8')
-                timestamp = datetime.now().strftime("%Y%m%d-%H-%M-%S")
-                st.download_button("⬇️ Download Predictions", csv, f"predicted_grades_{timestamp}.csv", "text/csv") 
-
-                st.bar_chart(df['predicted_grade'])
-
-                st.header("🏆 Top Performing Students")
-                top_students = df.sort_values(by='predicted_grade', ascending=False).head(5)
-                st.table(top_students[['hours_studied', 'attendance_rate', 'predicted_grade']])  
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                st.download_button("⬇️ Download Predictions", csv, f"predictions_{timestamp}.csv", "text/csv")
             except Exception as e:
-                st.error(f"❌ Error: Your CSV is missing input columns. Details: {e}")
-
-    # 3. OUTER ELSE: No file uploaded yet
+                st.error(f"❌ Error: CSV must have columns: hours_studied, attendance_rate, previous_score, tutoring_sessions")
+        else:
+            # If grades exist, just show the stats
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}")
+            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}")
+            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}")
+    
     else:
-        st.info("👆 Please upload a CSV file to begin!")
+        st.info("👆 Please upload a CSV file to begin analysis.")
 
 # === TAB 2: PREDICTION ENGINE ===
 with tab2:
