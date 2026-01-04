@@ -126,8 +126,6 @@ with tab1:
                 horizontal=True
             )
             
-            st.info("ℹ️ **Note:** Data cleaning is applied to input features only. The **Final Grade** is left untouched to ensure accurate predictions.")
-
             # 1. Identify columns to clean (Everything EXCEPT final_grade)
             cols_to_clean = [col for col in df.columns if col != 'final_grade']
 
@@ -162,6 +160,7 @@ with tab1:
 
             st.success(f"✅ Applied Strategy: {clean_method}")
         else:
+            st.write("**Note:** Data cleaning is applied to input features only. The **Final Grade** is left untouched to ensure accurate predictions.")
             st.success("✅ Data is strictly clean! No missing values detected.")
 
         st.divider()  # --- FEATURE 2: DISTRIBUTIONS ---
