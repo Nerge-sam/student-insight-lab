@@ -125,13 +125,30 @@ with tab1:
             st.success("✅ specific fix: Missing values have been filled with the column average.")
         else:
             st.success("✅ Data is strictly clean! No missing values detected.")
+        
+        st.divider()
+
+        # --- FEATURE 2: DISTRIBUTIONS (New!) ---
+        if 'final_grade' in df.columns:
+            st.subheader("2. Grade Distribution")
+            st.write("How are the grades spread across the class?")
+            
+            # Simple Streamlit Bar Chart
+            # We count how many students got each grade (rounded to nearest 10 for grouping)
+            grade_counts = df['final_grade'].value_counts().sort_index()
+            st.bar_chart(grade_counts)
+            
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}%")
+            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}%")
+            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}%")
 
         st.divider()
 
-        # --- FEATURE 2: CORRELATIONS ---
+        # --- FEATURE 3: CORRELATIONS ---
         # We can only show correlations if the file actually has 'final_grade'
         if 'final_grade' in df.columns:
-            st.subheader("2. Correlation Analysis")
+            st.subheader("3. Correlation Analysis")
             st.write("Which factors actually affect the final grade?")
             
             # Select only numbers (ignore Names/IDs if they exist)
@@ -155,8 +172,8 @@ with tab1:
 
         st.divider()
 
-        # --- FEATURE 3: PREDICTIONS (Existing Logic) ---
-        st.subheader("3. Predictive Modeling")
+        # --- FEATURE 4: PREDICTIONS (Existing Logic) ---
+        st.subheader("4. Predictive Modeling")
         if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
             try:
@@ -173,10 +190,10 @@ with tab1:
         else:
             # If grades exist, just show the stats
             col1, col2, col3 = st.columns(3)
-            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}")
-            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}")
-            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}")
-    
+            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}%")
+            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}%")
+            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}%")
+
     else:
         st.info("👆 Please upload a CSV file to begin analysis.")
 
