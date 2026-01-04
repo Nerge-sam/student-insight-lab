@@ -137,11 +137,6 @@ with tab1:
             # We count how many students got each grade (rounded to nearest 10 for grouping)
             grade_counts = df['final_grade'].value_counts().sort_index()
             st.bar_chart(grade_counts)
-            
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}%")
-            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}%")
-            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}%")
 
         st.divider()
 
