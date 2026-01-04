@@ -24,16 +24,24 @@ load_dotenv() # Load your HF Key
 
 def get_ai_feedback(prediction, hours, attendance, prev_score):
     """Generates a human-like explanation using Groq (Llama 3)."""
+    # Initialize to avoid UnboundLocalError
     api_key = None
     try:
         st.secret = st.secrets["GROQ_API_KEY"]
-    except:
+    except Exception:
+        pass
+    # If Cloud failed, try local .env (Laptop)
+    if not api_key:
         api_key = os.getenv("GROQ_API_KEY")
+
+    # Final Check
+    if not api_key:
+        return "❌ Error: Missing GROQ_API_KEY. Set it in Secrets (Cloud) or .env (Local)."
 
     if not api_key:
         return "❌ Error: Missing GROQ_API_KEY in .env file."
 
-    # 2. Define the Prompt
+    # Define the Prompt
     prompt = f"""You are an academic advisor. 
     A student has the following stats:
     - Predicted Final Grade: {prediction:.1f}/100
@@ -43,7 +51,7 @@ def get_ai_feedback(prediction, hours, attendance, prev_score):
 
     Provide ONE sentence of specific, actionable advice to help them improve."""
 
-    # 3. Call Groq API (Standard OpenAI Format)
+    # Call Groq API (Standard OpenAI Format)
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -72,20 +80,20 @@ def retrain_model(new_df):
     Takes new data, combines it with old knowledge, 
     and saves a smarter 'Edition 2' model.
     """
-    # 1. Handle missing columns if the user uploaded a messy CSV
+    # Handle missing columns if the user uploaded a messy CSV
     required_cols = ['hours_studied', 'attendance_rate', 'previous_score', 'tutoring_sessions', 'final_grade']
     if not all(col in new_df.columns for col in required_cols):
         return "❌ Error: CSV is missing columns!"
 
-    # 2. Define X and y from the NEW data
+    # Define X and y from the NEW data
     X_new = new_df[['hours_studied', 'attendance_rate', 'previous_score', 'tutoring_sessions']]
     y_new = new_df['final_grade']
     
-    # 3. Train a NEW model on just the new data
+    # Train a NEW model on just the new data
     new_model = LinearRegression()
     new_model.fit(X_new, y_new)
     
-    # 4. Save it (Overwrite the old brain)
+    # Save it (Overwrite the old brain)
     joblib.dump(new_model, 'student_grade_predictor.pkl')
     return "✅ Success! The model has learned from the new data."
 
