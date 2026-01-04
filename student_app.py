@@ -125,49 +125,50 @@ with tab1:
                 ["Mean (Average)", "Median (Middle)", "Mode (Most Frequent)", "Specific Value", "Fill with 0 (Zero)", "Drop Rows"],
                 horizontal=True
             )
-
-            # 1. MEAN
-            if clean_method == "Mean (Average)":
-                st.info("ℹ️ **Good for:** Normal data. **Bad for:** Data with extreme outliers.")
-                df = df.fillna(df.mean(numeric_only=True))
-                
-            # 2. MEDIAN
-            elif clean_method == "Median (Middle)":
-                st.info("ℹ️ **Good for:** Skewed data (e.g., income, grades). **Bad for:** Precise totals.")
-                df = df.fillna(df.median(numeric_only=True))
             
-            # 3. MODE (Most Frequent)
+            st.info("ℹ️ **Note:** Data cleaning is applied to input features only. The **Final Grade** is left untouched to ensure accurate predictions.")
+
+            # 1. Identify columns to clean (Everything EXCEPT final_grade)
+            cols_to_clean = [col for col in df.columns if col != 'final_grade']
+
+            # 2. Apply Strategy
+            
+            # A. MEAN
+            if clean_method == "Mean (Average)":
+                st.write("ℹ️ **Good for:** Normal data. **Bad for:** Outliers.")
+                df[cols_to_clean] = df[cols_to_clean].fillna(df[cols_to_clean].mean(numeric_only=True))
+                
+            # B. MEDIAN
+            elif clean_method == "Median (Middle)":
+                st.write("ℹ️ **Good for:** Skewed data. **Bad for:** Precise totals.")
+                df[cols_to_clean] = df[cols_to_clean].fillna(df[cols_to_clean].median(numeric_only=True))
+            
+            # C. MODE
             elif clean_method == "Mode (Most Frequent)":
-                st.info("ℹ️ **Good for:** Categories (e.g., 'Yes/No') or common scores. **Bad for:** Continuous numbers.")
-                # Mode can return multiple values, so we take the first one [0]
-                for col in df.columns:
+                st.write("ℹ️ **Good for:** Categories. **Bad for:** Continuous numbers.")
+                for col in cols_to_clean:
                     if df[col].isnull().sum() > 0:
                         df[col] = df[col].fillna(df[col].mode()[0])
             
-            # 4. CUSTOM VALUE
+            # D. CUSTOM VALUE 
             elif clean_method == "Specific Value":
-                st.info("ℹ️ **Good for:** Policy rules (e.g., 'Missing = 0').")
+                st.write("ℹ️ **Good for:** Specific policy rules.")
                 custom_val = st.number_input("Enter the value to fill:", value=0, min_value=0, max_value=100)
-                df = df.fillna(custom_val)
+                df[cols_to_clean] = df[cols_to_clean].fillna(custom_val)
 
-            # 5. FILL WITH 0(ZERO)
+            # E. FILL WITH 0 
             elif clean_method == "Fill with 0 (Zero)":
-                st.info("ℹ️ **Pros:** Safe assumption if missing means 'did not submit'. **Cons:** brutally lowers the class average.")
-                df = df.fillna(0)
+                st.write("ℹ️ **Pros:** Safe assumption. **Cons:** Lowers averages.")
+                df[cols_to_clean] = df[cols_to_clean].fillna(0)
                 
-            # 6. DROP
+            # F. DROP ROWS
             elif clean_method == "Drop Rows":
-                st.error("⚠️ **Warning:** Removes data. Use only if you have plenty of rows.")
-                df = df.dropna()
+                st.error("⚠️ **Warning:** Removes data.")
+                df = df.dropna(subset=cols_to_clean)
 
             st.success(f"✅ Applied Strategy: {clean_method}")
 
-        else:
-            st.success("✅ Data is strictly clean! No missing values detected.")
-        
-        st.divider()
-
-        # --- FEATURE 2: DISTRIBUTIONS (New!) ---
+        st.divider()  # --- FEATURE 2: DISTRIBUTIONS ---
         if 'final_grade' in df.columns:
             st.subheader("Grade Distribution")
             st.write("How are the grades spread across the class?")
@@ -176,6 +177,8 @@ with tab1:
             # We count how many students got each grade (rounded to nearest 10 for grouping)
             grade_counts = df['final_grade'].value_counts().sort_index()
             st.bar_chart(grade_counts)
+        else:
+            st.info("ℹ️ Upload a file with 'final_grade' to see the distribution.")
 
         st.divider()
 
