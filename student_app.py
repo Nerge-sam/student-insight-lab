@@ -134,7 +134,8 @@ with tab1:
             # A. MEAN
             if clean_method == "Mean (Average)":
                 st.write("ℹ️ **Good for:** Normal data. **Bad for:** Outliers.")
-                df[cols_to_clean] = df[cols_to_clean].fillna(df[cols_to_clean].mean(numeric_only=True))
+                fill_values = df[cols_to_clean].mean(numeric_only=True).round()
+                df[cols_to_clean] = df[cols_to_clean].fillna(fill_values).astype(int)
                 
             # B. MEDIAN
             elif clean_method == "Median (Middle)":
