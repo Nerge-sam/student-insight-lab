@@ -166,7 +166,7 @@ with tab1:
 
         st.divider()
         # --- FEATURE 2: DATA OVERVIEW ---
-        st.write(df.sample(5)
+        st.write(df.sample(5))
 
         st.divider()  
         # --- FEATURE 2: DISTRIBUTIONS ---
