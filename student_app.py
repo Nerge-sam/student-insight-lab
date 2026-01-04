@@ -153,7 +153,7 @@ with tab1:
             corr_matrix = numeric_df.corr()
             
             # DISPLAY HEATMAP (Using Pandas Styling - No heavy Seaborn needed!)
-            st.dataframe(corr_matrix.style.background_gradient(cmap="coolwarm"), use_container_width=True)
+            st.dataframe(corr_matrix.style.background_gradient(cmap="coolwarm"), width="stretch")
             
             # INTELLIGENT INSIGHT
             # Find the factor with the highest correlation to 'final_grade' (ignoring the grade itself)
