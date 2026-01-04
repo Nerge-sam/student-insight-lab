@@ -24,7 +24,7 @@ load_dotenv() # Load your HF Key
 
 def get_ai_feedback(prediction, hours, attendance, prev_score):
     """Generates a human-like explanation using Groq (Llama 3)."""
-    
+    api_key = None
     try:
         st.secret = st.secrets["GROQ_API_KEY"]
     except:
