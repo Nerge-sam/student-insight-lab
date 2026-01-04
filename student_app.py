@@ -206,7 +206,7 @@ with tab1:
 
         st.divider()
 
-        # --- FEATURE 4: PREDICTIONS (Existing Logic) ---
+        # --- FEATURE 4: PREDICTIONS ---
         st.subheader("4. Predictive Modeling")
         if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
