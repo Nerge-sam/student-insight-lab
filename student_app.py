@@ -122,7 +122,7 @@ with tab1:
             
             clean_method = st.radio(
                 "Select a method:",
-                ["Mean (Average)", "Median (Middle)", "Mode (Most Frequent)", "Specific Value", "Fill with 0 (Zero)", "Drop Rows"],
+                ["Mean (Average)", "Median (Middle)", "Mode (Most Frequent)", "Fill with 0 (Zero)", "Drop Rows"],
                 horizontal=True
             )
             
@@ -150,18 +150,12 @@ with tab1:
                     if df[col].isnull().sum() > 0:
                         df[col] = df[col].fillna(df[col].mode()[0])
             
-            # D. CUSTOM VALUE 
-            elif clean_method == "Specific Value":
-                st.write("ℹ️ **Good for:** Specific policy rules.")
-                custom_val = st.number_input("Enter the value to fill:", value=0, min_value=0, max_value=100)
-                df[cols_to_clean] = df[cols_to_clean].fillna(custom_val)
-
-            # E. FILL WITH 0 
+            # D. FILL WITH 0 
             elif clean_method == "Fill with 0 (Zero)":
                 st.write("ℹ️ **Pros:** Safe assumption. **Cons:** Lowers averages.")
                 df[cols_to_clean] = df[cols_to_clean].fillna(0)
                 
-            # F. DROP ROWS
+            # E. DROP ROWS
             elif clean_method == "Drop Rows":
                 st.error("⚠️ **Warning:** Removes data.")
                 df = df.dropna(subset=cols_to_clean)
