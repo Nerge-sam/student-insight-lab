@@ -167,6 +167,8 @@ with tab1:
                 df = df.dropna(subset=cols_to_clean)
 
             st.success(f"✅ Applied Strategy: {clean_method}")
+        else:
+            st.success("✅ Data is strictly clean! No missing values detected.")
 
         st.divider()  # --- FEATURE 2: DISTRIBUTIONS ---
         if 'final_grade' in df.columns:
