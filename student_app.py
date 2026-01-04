@@ -147,7 +147,7 @@ with tab1:
             # 4. CUSTOM VALUE
             elif clean_method == "Specific Value":
                 st.info("ℹ️ **Good for:** Policy rules (e.g., 'Missing = 0').")
-                custom_val = st.number_input("Enter the value to fill:", value=0)
+                custom_val = st.number_input("Enter the value to fill:", value=0, min_value=0, max_value=100)
                 df = df.fillna(custom_val)
 
             # 5. FILL WITH 0(ZERO)
