@@ -111,27 +111,84 @@ with tab1:
         df = pd.read_csv(file)
         
         # --- FEATURE 1: DATA CLEANING ---
-        st.subheader("1. Data Health & Cleaning")
+        st.subheader("Data Health & Cleaning")
         missing_count = df.isnull().sum().sum()
         
         if missing_count > 0:
-            st.warning(f"⚠️ Found {missing_count} missing values in the uploaded file.")
-            
-            # Show where the missing data is
+            st.warning(f"⚠️ Found {missing_count} missing values.")
             st.write("Missing data by column:", df.isnull().sum()[df.isnull().sum() > 0])
             
-            # AUTO-CLEAN: Fill missing numeric values with the column average (Mean Imputation)
-            df = df.fillna(df.mean(numeric_only=True))
-            st.success("✅ specific fix: Missing values have been filled with the column average.")
+            st.markdown("### 🛠️ Choose a Cleaning Strategy")
+            
+            clean_method = st.radio(
+                "Select a method:",
+                ["Mean (Average)", "Median (Middle)", "Mode (Most Frequent)", "Fill with 0 (Zero)", "Drop Rows"],
+                horizontal=True
+            )
+            
+            # 1. Identify columns to clean (Everything EXCEPT final_grade)
+            cols_to_clean = [col for col in df.columns if col != 'final_grade']
+
+            # 2. Apply Strategy
+            
+            # A. MEAN
+            if clean_method == "Mean (Average)":
+                st.write("ℹ️ **Good for:** Normal data. **Bad for:** Outliers.")
+                fill_values = df[cols_to_clean].mean(numeric_only=True).round()
+                df[cols_to_clean] = df[cols_to_clean].fillna(fill_values).astype(int)
+                
+            # B. MEDIAN
+            elif clean_method == "Median (Middle)":
+                st.write("ℹ️ **Good for:** Skewed data. **Bad for:** Precise totals.")
+                df[cols_to_clean] = df[cols_to_clean].fillna(df[cols_to_clean].median(numeric_only=True))
+            
+            # C. MODE
+            elif clean_method == "Mode (Most Frequent)":
+                st.write("ℹ️ **Good for:** Categories. **Bad for:** Continuous numbers.")
+                for col in cols_to_clean:
+                    if df[col].isnull().sum() > 0:
+                        df[col] = df[col].fillna(df[col].mode()[0])
+            
+            # D. FILL WITH 0 
+            elif clean_method == "Fill with 0 (Zero)":
+                st.write("ℹ️ **Pros:** Safe assumption. **Cons:** Lowers averages.")
+                df[cols_to_clean] = df[cols_to_clean].fillna(0)
+                
+            # E. DROP ROWS
+            elif clean_method == "Drop Rows":
+                st.error("⚠️ **Warning:** Removes data.")
+                df = df.dropna(subset=cols_to_clean)
+
+            st.success(f"✅ Applied Strategy: {clean_method}")
+            st.write("**Note:** Data cleaning is applied to input features only. The **Final Grade** is left untouched to ensure accurate predictions.")
         else:
             st.success("✅ Data is strictly clean! No missing values detected.")
 
         st.divider()
+        # --- FEATURE 2: DATA OVERVIEW ---
+        st.subheader("Data Overview")
+        overview_df = df.sample(5)
+        st.write(overview_df)
 
-        # --- FEATURE 2: CORRELATIONS ---
+        st.divider()  
+        # --- FEATURE 3: DISTRIBUTIONS ---
+        if 'final_grade' in df.columns:
+            st.subheader("Grade Distribution")
+            st.write("How are the grades spread across the class?")
+            
+            # Simple Streamlit Bar Chart
+            # We count how many students got each grade (rounded to nearest 10 for grouping)
+            grade_counts = df['final_grade'].value_counts().sort_index()
+            st.bar_chart(grade_counts)
+        else:
+            st.info("ℹ️ Upload a file with 'final_grade' to see the distribution.")
+
+        st.divider()
+
+        # --- FEATURE 4: CORRELATIONS ---
         # We can only show correlations if the file actually has 'final_grade'
         if 'final_grade' in df.columns:
-            st.subheader("2. Correlation Analysis")
+            st.subheader("Correlation Analysis")
             st.write("Which factors actually affect the final grade?")
             
             # Select only numbers (ignore Names/IDs if they exist)
@@ -141,7 +198,7 @@ with tab1:
             corr_matrix = numeric_df.corr()
             
             # DISPLAY HEATMAP (Using Pandas Styling - No heavy Seaborn needed!)
-            st.dataframe(corr_matrix.style.background_gradient(cmap="coolwarm"), use_container_width=True)
+            st.dataframe(corr_matrix.style.background_gradient(cmap="coolwarm"), width="stretch")
             
             # INTELLIGENT INSIGHT
             # Find the factor with the highest correlation to 'final_grade' (ignoring the grade itself)
@@ -155,8 +212,8 @@ with tab1:
 
         st.divider()
 
-        # --- FEATURE 3: PREDICTIONS (Existing Logic) ---
-        st.subheader("3. Predictive Modeling")
+        # --- FEATURE 5: PREDICTIONS ---
+        st.subheader("Predictive Modeling")
         if 'final_grade' not in df.columns:
             st.warning("⚠️ New Data Detected (Grades Missing). Running AI Predictions...")
             try:
@@ -173,10 +230,10 @@ with tab1:
         else:
             # If grades exist, just show the stats
             col1, col2, col3 = st.columns(3)
-            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}")
-            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}")
-            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}")
-    
+            col1.metric("Class Average", f"{df['final_grade'].mean():.1f}%")
+            col2.metric("Highest Score", f"{df['final_grade'].max():.1f}%")
+            col3.metric("Lowest Score", f"{df['final_grade'].min():.1f}%")
+
     else:
         st.info("👆 Please upload a CSV file to begin analysis.")
 
