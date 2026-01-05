@@ -1,16 +1,7 @@
-<<<<<<< HEAD
-streamlit
-pandas
-scikit-learn
-python-dotenv
-requests
-joblib
-=======
 streamlit
 pandas
 scikit-learn==1.7.2
 python-dotenv
 requests
 joblib
->>>>>>> 6989883b8075eaa642968817e60d2a9e9356a8a3
 matplotlib
