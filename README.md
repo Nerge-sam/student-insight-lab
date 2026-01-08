@@ -2,7 +2,7 @@
 
 A Machine Learning powered dashboard that helps educators analyze student data, predict performance, and receive actionable, AI-driven advice to improve grades.
 
-🔗 **[Live Demo App](https://student-insight-lab-nxenmtyr2kgvzc2juw5vrm.streamlit.app)**
+🔗 **[Live Demo App](https://student-insight-lab-xyz.streamlit.app)**
 
 ---
 
